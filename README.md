@@ -4,7 +4,8 @@
 add up to a year.
 
 A daily planner: goals and to-dos per date, notes, carrying unfinished goals forward, and yearly / monthly /
-weekly goals. No sign-in needed — everything is saved on the device.
+weekly goals. No sign-in needed — everything is saved on the device; with an ID it is also kept in a
+database and follows you to any device.
 
 ```bash
 npm install
@@ -51,7 +52,9 @@ What keeps it there:
 src/
   config/features.ts   Feature flags and which plan gets what
   domain/              Plain types and date maths — no React, no storage
-  data/persist.ts      The one place that decides where data is stored, and whose it is
+  data/persist.ts      The copy on the device, and whose it is
+  data/sync.ts         Keeps a signed-in person's stores and their database tables in step
+  data/supabase.ts     The connection to the database
   ui/                  Reusable pieces: Dialog, Menu, AddInput, Stepper, Chips, icons, build
   styles/              Design tokens, glass and shared CSS, the opening sequence
   app/                 Top bar and page frame
@@ -60,7 +63,7 @@ src/
     home/              Life lessons: lessons.json and the page that writes them out
     planner/           Daily view: date rail, goal list, note window, carry
     goals/             Year / month / week goals box
-    account/           Profile, and sign-in behind an AuthGateway
+    account/           Profile, and sign-in (Supabase, behind an AuthGateway)
 ```
 
 Rules that keep it clean:
@@ -75,39 +78,48 @@ Rules that keep it clean:
 
 Every person's planner and goals are kept apart under their own owner id.
 
-- Before sign-in the owner is `guest`. Creating an ID hands the guest's data to that ID.
-- Signing in switches every user store to that person's data; signing out switches back to an empty guest.
-- `userStore(...)` in `data/persist.ts` is for data that belongs to a person; `deviceStore(...)` is for the
-  one thing that belongs to the device (who is signed in).
+- **Without an ID** the owner is `guest` and everything stays on the device. Nothing is sent anywhere.
+- **Creating an ID** hands the guest's work to it: a brand-new ID, holding nothing yet, adopts what is on
+  the device. Signing in to an ID that already has data shows that data instead; the guest's stays behind.
+- **Signing out** switches back to an empty guest. The ID's data stays in the database and in a copy on
+  that device, sealed off under its own id.
 
-Today this separation is per browser. With Supabase it is enforced by the database — see below.
+`userStore(...)` in `data/persist.ts` is for data that belongs to a person; `deviceStore(...)` is for the one
+thing that belongs to the device (who is signed in).
 
-## Connecting Supabase
+## The database (Supabase)
 
-The app is shaped so the database slots in without touching screens or stores' logic.
+Sign-in and storage for people with an ID run on Supabase.
 
-1. **Schema** — run [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql). It creates
-   `profiles`, `subscriptions`, `tasks`, `goals` and `lessons`, one-to-one with `src/domain/types.ts`.
-   `lessons` is shared app content: everyone can read it, only the server can write it.
-2. **Privacy** — every table has row-level security: a row is only visible to, and writable by, the user
-   whose id is on it, and the database fills that id in from the session. A tampered client still cannot
-   read or write anyone else's rows. `subscriptions` is read-only to its owner, so a plan can only be changed
-   by the server (the payment webhook).
-3. **Auth** — write `supabaseGateway.ts` implementing `AuthGateway` (`signUp` → `auth.signUp`,
-   `signIn` → `signInWithPassword` / `signInWithOtp` / `signInWithOAuth`) and point `auth` at it in
-   `features/account/store.ts`. The `Credentials` type already covers email, phone and Google.
-4. **Data** — in `data/persist.ts`, mirror each user store to its table: load the user's rows after
-   `switchOwner`, and write changes through. Local storage then acts as the offline cache.
-5. **Keys** — only the project URL and the public *anon* key go in the app (`.env.local`, already
-   git-ignored). The *service-role* key bypasses row-level security and must never ship to the browser.
+- **Sign-in** — `features/account/auth/supabaseGateway.ts`, email and password, confirmed from an emailed
+  link. The app learns who is signed in from one place only (`auth.watch` in `features/account/store.ts`),
+  so a sign-in in another tab, an emailed link, or a session running out are all handled the same way.
+- **Storage** — the device is always written first, so the app is instant and works offline.
+  `data/sync.ts` mirrors each store to a table: it reads the table on sign-in, then sends every change a
+  moment later. Unsent changes are listed on the device, so they survive a closed tab or lost connection.
+  A store opts in with one `mirror({...})` call next to it (see `planner/store.ts`, `goals/store.ts`).
+- **Privacy** — enforced by the database, not the app. Every row carries its owner, filled in by the
+  database from the signed-in session, and row-level security only ever returns a person their own rows.
+  A tampered client still cannot read or write anyone else's. `subscriptions` is read-only to its owner, so
+  a plan can only be changed by the server (a payment webhook).
+- **Schema** — [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql): `profiles`,
+  `subscriptions`, `tasks`, `goals`, mirroring `src/domain/types.ts`.
+- **Checking privacy** — [`supabase/tests/privacy.sql`](supabase/tests/privacy.sql) acts as two users and a
+  signed-out visitor and reports what each could reach, then rolls itself back. Run it after any change to
+  the schema or its policies.
+- **Keys** — `.env` holds the project URL and the *publishable* key. Both are public by design (they are
+  sent to every browser) and are committed. The *secret* key bypasses row-level security: it must never be
+  in this repository or in the app.
+
+Not built yet: password reset, changing email, and deleting an ID.
 
 ## Life lessons
 
 The home page writes out one lesson at a time and replaces it on its own; there is nothing to click.
 The library is [`src/features/home/lessons.json`](src/features/home/lessons.json): short lessons **in our
 own words** (not quotations), each with the person it was learned from and a source link. A web page cannot
-search the internet by itself, so today the library ships with the app. Once Supabase is connected, a
-scheduled function can add fresh rows to the `lessons` table and the page reads from there instead.
+search the internet by itself, so the library ships with the app. A `lessons` table fed by a scheduled
+Supabase function would let it grow without a new release.
 
 ## Built to grow
 
@@ -116,7 +128,8 @@ scheduled function can add fresh rows to the `lessons` table and the page reads 
 | **Phone or Google sign-in** | The `Credentials` type already has `phone` and `google` shapes and `User` already has `phone` and `providers`. Implement them in the gateway and add the buttons. |
 | **Subscriptions** | `config/features.ts` — each feature lists the plans that include it, `User.plan` says which plan someone is on, and the UI asks `can(feature, plan)`. The `subscriptions` table is ready for a payment webhook to write to. |
 | **Weekly / monthly views** | Add the page under `features/planner/`, a route in `main.tsx`, and flip `released` in `config/features.ts`. The menu entries already exist. |
-| **A change to stored data** | Bump `version` in `data/persist.ts` and add a `migrate` function; add a new SQL migration alongside. |
+| **A change to stored data** | Bump `version` in `data/persist.ts` and add a `migrate` function; add a new SQL migration alongside, and update the store's `toRow` / `fromRow`. |
+| **A new kind of synced data** | A table with the same owner column and policy as `tasks`, and one `mirror({...})` call next to its store. |
 
 ## Data model
 

@@ -2,7 +2,6 @@ node_modules
 dist
 .DS_Store
 *.local
-.env
+# .env holds only public values and is committed; anything private goes in .env.local
 .env.*
-!.env.example
 .claude/

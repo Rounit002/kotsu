@@ -1,6 +1,7 @@
 import { userStore } from '../../data/persist'
+import { mirror } from '../../data/sync'
 import type { ISODate } from '../../domain/dates'
-import type { CarryLink, Task } from '../../domain/types'
+import type { CarryLink, Task, TaskStatus } from '../../domain/types'
 
 /** What a task looks like in the list — one tone per task, mirrored by the legend. */
 export type TaskTone = 'open' | 'done' | 'missed' | 'carried' | 'carried-in'
@@ -70,3 +71,48 @@ export const usePlanner = userStore<PlannerState>('planner', (set) => ({
       return { tasks: { ...s.tasks, [id]: carried, [copy.id]: copy } }
     }),
 }))
+
+/** A task as the `tasks` table stores it (supabase/migrations). */
+interface TaskRow {
+  id: string
+  date: ISODate
+  title: string
+  note: string
+  status: TaskStatus
+  carried_from_id: string | null
+  carried_from_date: ISODate | null
+  carried_to_id: string | null
+  carried_to_date: ISODate | null
+  created_at: string
+}
+
+const link = (taskId: string | null, date: ISODate | null): CarryLink | undefined => (taskId && date ? { taskId, date } : undefined)
+
+mirror<PlannerState, Task, TaskRow>({
+  table: 'tasks',
+  store: usePlanner,
+  records: (state) => Object.values(state.tasks),
+  restore: (tasks) => ({ tasks: Object.fromEntries(tasks.map((t) => [t.id, t])) }),
+  toRow: (t) => ({
+    id: t.id,
+    date: t.date,
+    title: t.title,
+    note: t.note,
+    status: t.status,
+    carried_from_id: t.carriedFrom?.taskId ?? null,
+    carried_from_date: t.carriedFrom?.date ?? null,
+    carried_to_id: t.carriedTo?.taskId ?? null,
+    carried_to_date: t.carriedTo?.date ?? null,
+    created_at: new Date(t.createdAt).toISOString(),
+  }),
+  fromRow: (row) => ({
+    id: row.id,
+    date: row.date,
+    title: row.title,
+    note: row.note,
+    status: row.status,
+    carriedFrom: link(row.carried_from_id, row.carried_from_date),
+    carriedTo: link(row.carried_to_id, row.carried_to_date),
+    createdAt: Date.parse(row.created_at),
+  }),
+})

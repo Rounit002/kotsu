@@ -1,4 +1,5 @@
 import { userStore } from '../../data/persist'
+import { mirror } from '../../data/sync'
 import type { Goal, GoalScope } from '../../domain/types'
 
 interface GoalsState {
@@ -17,3 +18,15 @@ export const useGoals = userStore<GoalsState>('goals', (set) => ({
   update: (id, patch) => set((s) => ({ goals: s.goals.map((g) => (g.id === id ? { ...g, ...patch } : g)) })),
   remove: (id) => set((s) => ({ goals: s.goals.filter((g) => g.id !== id) })),
 }))
+
+/** A goal as the `goals` table stores it (supabase/migrations). */
+type GoalRow = Omit<Goal, 'createdAt'> & { created_at: string }
+
+mirror<GoalsState, Goal, GoalRow>({
+  table: 'goals',
+  store: useGoals,
+  records: (state) => state.goals,
+  restore: (goals) => ({ goals: goals.sort((a, b) => a.createdAt - b.createdAt) }),
+  toRow: ({ createdAt, ...goal }) => ({ ...goal, created_at: new Date(createdAt).toISOString() }),
+  fromRow: ({ id, scope, period, title, done, created_at }) => ({ id, scope, period, title, done, createdAt: Date.parse(created_at) }),
+})
