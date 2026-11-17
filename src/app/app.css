@@ -1,0 +1,123 @@
+/* The wall: one picture, fixed behind everything. A new one pours in over the old. */
+.wall {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+}
+
+.wall-layer {
+  position: absolute;
+  inset: 0;
+  background: 68% 50% / cover no-repeat; /* on a tall screen, keep the side with the sun or moon */
+  animation: flood 900ms cubic-bezier(0.3, 0.7, 0.2, 1) backwards;
+}
+
+/* The background picker: each tile is the picture itself. */
+.scene-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 9.5rem);
+  gap: var(--s-2);
+  padding: var(--s-1);
+}
+
+.scene-tile {
+  display: flex;
+  align-items: flex-end;
+  aspect-ratio: 16 / 10;
+  padding: var(--s-2);
+  border-radius: var(--radius-sm);
+  background: center / cover no-repeat;
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.scene-tile:hover {
+  outline-color: var(--hairline-strong);
+}
+
+.scene-tile[aria-checked='true'] {
+  outline-color: var(--accent-ink);
+}
+
+.scene-tile span {
+  padding: 2px var(--s-2);
+  border-radius: var(--pill);
+  background: var(--caption-bg);
+  color: var(--caption-ink);
+  font-size: var(--text-xs);
+  font-weight: 600;
+}
+
+/* A capsule of glass floating above the page; on a phone the page scrolls beneath it. */
+.topbar {
+  position: sticky;
+  top: var(--s-4);
+  z-index: 5;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--s-4);
+  height: var(--bar);
+  margin: var(--s-4) var(--s-5);
+  padding: 0 var(--s-3);
+  border-radius: var(--pill);
+}
+
+.topbar-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  min-width: 0;
+  height: var(--control);
+  padding: 0 var(--s-3);
+  border-radius: var(--pill);
+}
+
+.topbar-meta strong {
+  overflow: hidden;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+button.topbar-meta:hover {
+  background: var(--well-strong);
+}
+
+.topbar-end {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  justify-self: end;
+}
+
+.topbar-end .topbar-meta {
+  padding-right: 0;
+}
+
+/* Narrow screens: navigation and Goals share the first row, the year drops to its own. */
+@media (max-width: 720px) {
+  .topbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2);
+    height: auto;
+    margin: var(--s-4);
+    padding: var(--s-2);
+    border-radius: var(--radius-lg);
+  }
+
+  .topbar > .row {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .topbar-end {
+    flex-basis: 100%;
+  }
+
+  button.topbar-meta .label {
+    display: none;
+  }
+}

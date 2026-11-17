@@ -1,0 +1,122 @@
+/*
+ * The construction sequence — the interface assembles itself instead of fading or sliding in.
+ *
+ *   frame   a glass panel: its outline is traced, then the glass floods in from a corner
+ *   print   a block of content: wiped in smoothly from left to right, as if being laid down
+ *   stamp   a small control: snapped into place
+ *   ink     an icon: drawn stroke by stroke (automatic for every .icon)
+ *   (text that should be typed letter by letter uses the <Typed> component)
+ *
+ * Every piece carries a beat — its turn in the sequence — set with build() from ui/build.tsx.
+ * While a page is opening a beat lasts 90ms; once it is ready, late arrivals use quick 40ms beats.
+ * Animations only fill backwards, so nothing stays clipped or transformed afterwards.
+ */
+@property --traced {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 360deg;
+}
+
+/* The nearest data-phase decides the pace; --tempo lets small things (menus, boxes) build faster. */
+[data-phase='opening'] {
+  --opening: 1;
+}
+
+[data-phase='ready'] {
+  --opening: 0;
+}
+
+[data-build] {
+  --ease: cubic-bezier(0.3, 0.7, 0.2, 1);
+  --slow: calc(var(--opening, 0) * var(--beat, 0) * 90ms);
+  --fast: calc((1 - var(--opening, 0)) * var(--quick, 0) * 40ms);
+  --delay: calc((var(--slow) + var(--fast)) * var(--tempo, 1));
+}
+
+/* frame — the rim is revealed by an angular sweep, in the accent colour, like a blueprint line */
+[data-build='frame']::after {
+  mask: conic-gradient(from -90deg, #000 var(--traced), #0000 0);
+  animation: trace calc(700ms * var(--tempo, 1)) ease-in-out var(--delay) backwards;
+}
+
+[data-build='frame']::before {
+  animation: flood calc(650ms * var(--tempo, 1)) var(--ease) calc(var(--delay) + 450ms * var(--tempo, 1)) backwards;
+}
+
+[data-build='print'] {
+  animation: print calc(420ms * var(--tempo, 1)) var(--ease) var(--delay) backwards;
+}
+
+[data-build='stamp'] {
+  animation: stamp 280ms cubic-bezier(0.3, 1.7, 0.5, 1) var(--delay) backwards;
+}
+
+/* Icons are stroke drawings, so each one is inked in as its control lands. */
+.icon * {
+  animation: ink 520ms ease-out calc(var(--delay, 0ms) + 120ms) backwards;
+}
+
+@keyframes ink {
+  from {
+    stroke-dasharray: 160;
+    stroke-dashoffset: 160;
+  }
+  to {
+    stroke-dasharray: 160;
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes trace {
+  from {
+    --traced: 0deg;
+    border-color: var(--accent-ink);
+  }
+  75% {
+    border-color: var(--accent-ink);
+  }
+}
+
+@keyframes flood {
+  from {
+    clip-path: circle(0% at 0% 0%);
+  }
+  to {
+    clip-path: circle(150% at 0% 0%);
+  }
+}
+
+@keyframes print {
+  from {
+    clip-path: inset(0 100% 0 0);
+  }
+  to {
+    clip-path: inset(0 0 0 0);
+  }
+}
+
+@keyframes stamp {
+  from {
+    scale: 0;
+  }
+}
+
+/* Typed text (see <Typed>): the sentence is laid out whole; these only colour parts of it. */
+::highlight(typed-rest) {
+  color: transparent;
+}
+
+::highlight(typed-caret) {
+  background-color: var(--accent-ink);
+  color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .wall-layer,
+  [data-build],
+  [data-build]::before,
+  [data-build]::after,
+  .icon * {
+    animation: none !important;
+  }
+}

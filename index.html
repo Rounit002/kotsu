@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A calm daily planner: goals and to-dos for each day, notes, carrying unfinished goals forward, and goals for the year, month and week."
+    />
+    <title>Kotsu — daily planner & goals</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- The one font the interface uses, fetched early so text never appears in a fallback and then jumps. -->
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      crossorigin
+      href="/node_modules/@fontsource-variable/google-sans-flex/files/google-sans-flex-latin-rond-normal.woff2"
+    />
+    <script>
+      // Before first paint: the remembered theme and the colour of the remembered background,
+      // so a refresh never flashes white or the wrong theme (see src/app/scenes/useScene.ts).
+      {
+        const root = document.documentElement
+        root.dataset.theme = localStorage.getItem('kotsu.theme') ?? (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+        const base = localStorage.getItem('kotsu.base')
+        if (base) root.style.setProperty('--base', base)
+      }
+    </script>
+    <style>
+      /* What shows until the stylesheet and the picture arrive. */
+      html {
+        background: var(--base, #f1b9cf);
+      }
+      html[data-theme='dark'] {
+        background: var(--base, #06122b);
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

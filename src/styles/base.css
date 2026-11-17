@@ -1,0 +1,429 @@
+/* Reset, then the shared primitives every screen is built from. */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* The page colour lives on <html> (set in index.html for first paint); a background here would cover the wall. */
+body {
+  margin: 0;
+  color: var(--ink);
+  font: 450 var(--text-md) / 1.5 var(--font-ui);
+  font-variation-settings: var(--roundness);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, p, ul, dl, dd, blockquote, figure {
+  margin: 0;
+}
+
+ul {
+  padding: 0;
+  list-style: none;
+}
+
+button, input, textarea {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+a {
+  color: var(--accent-ink);
+  text-underline-offset: 3px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-ink);
+  outline-offset: 2px;
+}
+
+::placeholder {
+  color: var(--ink-3);
+}
+
+/* ── Glass ────────────────────────────────────────────────
+ * The pane (::before) and its rim (::after) are separate layers, so the opening
+ * sequence can trace the rim and flood the pane without touching what is inside. */
+.glass {
+  position: relative;
+  isolation: isolate;
+  border-radius: var(--radius-lg);
+}
+
+.glass::before,
+.glass::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.glass::before {
+  z-index: -1;
+  background: var(--glass);
+  box-shadow: var(--shine), var(--shadow);
+  -webkit-backdrop-filter: var(--frost);
+  backdrop-filter: var(--frost);
+}
+
+.glass::after {
+  border: 1px solid var(--edge);
+}
+
+/*
+ * Where the browser can bend the backdrop (see ui/Lens.tsx) a pane becomes a lens: its rim shows what is
+ * behind it clear but bent, and the frost and tint move into the filter's middle. A pane is a lens from
+ * its first frame — swapping filters part-way through the opening showed as a flicker. A lens is costly to
+ * redraw, so the page's own panes get one only on the wide layout, where the page does not scroll.
+ */
+@media (prefers-reduced-transparency: no-preference) {
+  [data-lens] .dialog {
+    --frost: url(#lens-box) saturate(180%);
+    --glass: var(--lens-rim);
+  }
+}
+
+@media (prefers-reduced-transparency: no-preference) and (min-width: 861px) {
+  [data-lens] :where(.glass:not(.inset, .menu-list, .dialog)) {
+    --frost: url(#lens) saturate(180%);
+    --glass: var(--lens-rim);
+  }
+
+  [data-lens] :where(.topbar, .legend) {
+    --frost: url(#lens-bar) saturate(180%);
+  }
+}
+
+.lens-defs {
+  position: absolute;
+  width: 0;
+  height: 0;
+}
+
+/* A pane set into another pane: tinted, not frosted — blur on blur costs a lot and adds little. */
+.glass.inset::before {
+  background: var(--well);
+  box-shadow: none;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.glass.inset::after {
+  border-color: var(--hairline);
+}
+
+/* ── Text ─────────────────────────────────────────────── */
+.label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+.muted {
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+
+.error {
+  font-size: var(--text-sm);
+  color: var(--missed-ink);
+}
+
+/* ── Layout ───────────────────────────────────────────── */
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+/* ── Buttons: capsules ────────────────────────────────── */
+.btn,
+.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  height: var(--control);
+  border: 1px solid transparent;
+  border-radius: var(--pill);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  white-space: nowrap;
+  text-decoration: none;
+  color: var(--ink);
+  transition: background-color 120ms, scale 120ms;
+}
+
+.btn {
+  padding: 0 var(--s-4);
+}
+
+.icon-btn {
+  width: var(--control);
+  flex: none;
+  color: var(--ink-2);
+}
+
+:is(.btn, .icon-btn):active:not(:disabled) {
+  scale: 0.96;
+}
+
+.btn:disabled,
+.icon-btn:disabled {
+  opacity: 0.45;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35), 0 6px 18px var(--accent-glow);
+}
+
+.btn-tonal {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+}
+
+.btn-outline {
+  background: var(--well);
+}
+
+.btn-danger {
+  color: var(--missed-ink);
+}
+
+:is(.btn-outline, .btn-ghost, .btn-danger, .icon-btn):hover:not(:disabled) {
+  background: var(--well-strong);
+}
+
+.link {
+  font-size: var(--text-sm);
+  color: var(--accent-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+/* ── Fields ───────────────────────────────────────────── */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+}
+
+.input {
+  width: 100%;
+  min-height: var(--control);
+  padding: var(--s-2) var(--s-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--well);
+}
+
+textarea.input {
+  min-height: 10rem;
+  resize: vertical;
+}
+
+/* "Type and press Enter" — shared by tasks and goals. */
+.add {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding-left: var(--s-3);
+  border: 1px dashed var(--hairline-strong);
+  border-radius: var(--radius);
+  color: var(--ink-3);
+}
+
+.add:focus-within {
+  border-style: solid;
+  border-color: var(--accent-ink);
+  background: var(--well);
+}
+
+.add input {
+  flex: 1;
+  min-width: 0;
+  height: 2.75rem;
+  border: 0;
+  background: none;
+  outline: none;
+  color: var(--ink);
+}
+
+/* ── Done / not-done marks ────────────────────────────── */
+.mark {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 1.5px solid var(--hairline-strong);
+  border-radius: 50%;
+  background: var(--well);
+  color: var(--ink-3);
+}
+
+.mark:hover:not(:disabled) {
+  border-color: var(--ink-2);
+  color: var(--ink);
+}
+
+.mark[aria-pressed='true'] {
+  border-color: var(--tone-ink);
+  background: var(--tone-ink);
+  color: var(--on-tone);
+}
+
+.mark:disabled {
+  opacity: 0.5;
+}
+
+/* ── Chips & stepper ──────────────────────────────────── */
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-1);
+}
+
+.chip {
+  height: 1.75rem;
+  padding: 0 var(--s-3);
+  border-radius: var(--pill);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.chip:hover {
+  background: var(--well);
+}
+
+.chip[aria-pressed='true'] {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+.stepper {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--s-1);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Menu ─────────────────────────────────────────────── */
+.menu {
+  position: relative;
+}
+
+.menu-list {
+  --glass: var(--glass-strong);
+  --tempo: 0.4;
+  position: absolute;
+  top: calc(100% + var(--s-2));
+  left: 0;
+  z-index: 10;
+  min-width: 12rem;
+  padding: var(--s-1);
+  border-radius: var(--radius);
+}
+
+.menu-list[data-align='end'] {
+  right: 0;
+  left: auto;
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: var(--control);
+  padding: 0 var(--s-3);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.menu-item:hover:not(:disabled) {
+  background: var(--well);
+}
+
+.menu-item[aria-current='page'] {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+.menu-item:disabled {
+  color: var(--ink-3);
+}
+
+/* ── Dialog: a thicker pane that floats above the page ── */
+.dialog {
+  --glass: var(--glass-strong);
+  --tempo: 0.6;
+  width: min(var(--dialog-width, 26rem), 100vw - var(--s-6));
+  max-height: calc(100dvh - var(--s-6));
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--ink);
+  overflow: visible;
+}
+
+.dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Only there to give the contents their own build phase. */
+.dialog-contents {
+  display: contents;
+}
+
+/* Only dimmed, never blurred: the box itself does the frosting, so its rim has something crisp to bend. */
+.dialog::backdrop {
+  background: var(--backdrop);
+}
+
+.dialog-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--s-3) var(--s-3) var(--s-3) var(--s-5);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.dialog-head h2 {
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.dialog-body {
+  padding: var(--s-5);
+  overflow-y: auto;
+}

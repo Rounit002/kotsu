@@ -1,0 +1,346 @@
+/* Page frame: dates on the left, the day in the middle, the colour key underneath. */
+.daily {
+  display: grid;
+  grid-template: minmax(0, 1fr) auto / auto minmax(0, 1fr);
+  gap: var(--s-4);
+  height: calc(100dvh - var(--topbar));
+  padding: 0 var(--s-5) var(--s-5);
+}
+
+/* ── Date rail ────────────────────────────────────────── */
+.rail {
+  display: flex;
+  flex-direction: column;
+  grid-row: 1 / -1;
+  width: 5.5rem;
+  padding: var(--s-4) 0 var(--s-3); /* bottom room keeps the scroller clear of the rounded corners */
+}
+
+.rail-title {
+  padding-bottom: var(--s-2);
+  text-align: center;
+}
+
+.rail-scroll {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none; /* the dates themselves show where you are */
+}
+
+/* A full-width frosted band the days pass beneath, so nothing is ever half covered. */
+.rail-month {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: var(--s-2) 0;
+  border-bottom: 1px solid var(--hairline);
+  background: var(--glass-strong);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  color: var(--ink);
+  text-align: center;
+}
+
+.rail-day {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--s-1);
+  padding: var(--s-2) 0;
+  color: inherit;
+  text-decoration: none;
+}
+
+.rail-month + .rail-day {
+  padding-top: var(--s-3);
+}
+
+.rail-dow {
+  font-size: var(--text-xs);
+  line-height: 1;
+  color: var(--ink-3);
+}
+
+.rail-num {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--control);
+  height: var(--control);
+  border: 1.5px solid transparent;
+  border-radius: 50%;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.rail-day:hover .rail-num {
+  background: var(--well-strong);
+}
+
+.rail-day[data-today] .rail-num {
+  border-color: var(--accent-ink);
+  color: var(--accent-ink);
+}
+
+.rail-day[aria-current] .rail-num {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3), 0 4px 14px var(--accent-glow);
+}
+
+/* Open goals: a badge on the day's corner, so it never changes the spacing between days. */
+.rail-day[data-pending] .rail-num::after,
+.dot {
+  content: '';
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 50%;
+  background: var(--accent-ink);
+}
+
+.rail-day[data-pending] .rail-num::after {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  border: 2px solid var(--solid);
+  box-sizing: content-box;
+}
+
+/* ── The day ──────────────────────────────────────────── */
+.day {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  min-height: 0;
+  padding: var(--s-5);
+}
+
+.day-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--s-2) var(--s-4);
+}
+
+.day-head h1 {
+  font-size: var(--text-xl);
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.day-body {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+  gap: var(--s-5);
+  flex: 1;
+  min-height: 0;
+}
+
+.day-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  min-height: 0;
+}
+
+.tasks {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-2);
+  flex: 1;
+  margin: -3px; /* room for the selected row's ring */
+  padding: 3px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+}
+
+/* The add field's text lines up with the goal titles below it: its icon sits where the two marks do. */
+.day-list .add .icon {
+  margin: 0 var(--s-5);
+}
+
+.day-list .add input {
+  padding-left: var(--s-1);
+}
+
+/* ── Task row ─────────────────────────────────────────── */
+.task {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 0 var(--s-3);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius);
+  background: var(--tone-bg, var(--well));
+  box-shadow: var(--shine);
+}
+
+.task[data-selected] {
+  border-color: var(--accent-ink);
+  box-shadow: var(--shine), 0 0 0 3px var(--accent-soft);
+}
+
+.task-main {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  flex: 1;
+  min-width: 0;
+  min-height: 3rem;
+  padding: var(--s-3) 0 var(--s-3) var(--s-1);
+  text-align: left;
+}
+
+.task-main svg {
+  flex: none;
+  color: var(--ink-2);
+}
+
+.task-title {
+  flex: 1;
+  overflow-wrap: anywhere;
+}
+
+.task[data-tone='done'] .task-title {
+  color: var(--ink-2);
+  text-decoration: line-through;
+}
+
+.task-tag {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--tone-ink, var(--carried-in-ink));
+}
+
+/* ── Detail window ────────────────────────────────────── */
+.detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-5);
+  min-height: 0;
+  padding: var(--s-5);
+  overflow-y: auto;
+  border-radius: var(--radius);
+}
+
+.detail-empty {
+  margin: auto;
+  text-align: center;
+}
+
+.detail-title {
+  width: 100%;
+  padding: var(--s-1) 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: none;
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.detail-title:hover,
+.detail-title:focus {
+  border-bottom-color: var(--hairline-strong);
+  outline: none;
+}
+
+.detail-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-3);
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--radius);
+  background: var(--tone-bg);
+  font-size: var(--text-sm);
+}
+
+.detail-status :is(a, .link) {
+  color: var(--tone-ink);
+  font-weight: 600;
+}
+
+.detail .input[type='date'] {
+  width: auto;
+  flex: 1;
+}
+
+.detail-delete {
+  align-self: flex-start;
+  margin-top: auto;
+}
+
+/* ── Colour key ───────────────────────────────────────── */
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-2) var(--s-5);
+  padding: var(--s-3) var(--s-5); /* same inset as the day pane above it */
+  font-size: var(--text-sm);
+  color: var(--ink-2);
+}
+
+.swatch {
+  width: 0.875rem;
+  height: 0.875rem;
+  border: 1px solid var(--tone-ink);
+  border-radius: 5px;
+  background: var(--tone-bg);
+}
+
+/* ── Narrow screens: dates run across the top, the page scrolls ── */
+@media (max-width: 860px) {
+  .daily {
+    grid-template: auto / minmax(0, 1fr);
+    height: auto;
+    padding: 0 var(--s-4) var(--s-4);
+  }
+
+  .rail {
+    grid-row: auto;
+    width: auto;
+    padding: var(--s-2) 0;
+  }
+
+  .rail-title {
+    display: none;
+  }
+
+  .rail-scroll,
+  .rail-scroll section {
+    display: flex;
+    align-items: center;
+  }
+
+  .rail-scroll {
+    overflow: auto hidden;
+    padding: 0 var(--s-2);
+  }
+
+  .rail-month {
+    position: static;
+    padding: 0 var(--s-3);
+    border: 0;
+    background: none;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+
+  .rail-day,
+  .rail-month + .rail-day {
+    min-width: 3rem;
+    padding: var(--s-2) 0;
+  }
+
+  .day-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .tasks {
+    overflow: visible;
+  }
+}

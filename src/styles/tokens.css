@@ -1,0 +1,139 @@
+/*
+ * Design tokens — the only place raw values live. Components use these names, never literals.
+ * Light is the default; [data-theme='dark'] on <html> swaps the values (see app/scenes/useScene.ts).
+ * The reasoning behind every choice is in docs/DESIGN.md.
+ */
+:root {
+  color-scheme: light;
+
+  /* What shows for a moment before the picture behind the glass has been painted (app/scenes) */
+  --base: #f1b9cf;
+
+  /* Glass: a translucent pane, a bright rim, a soft shadow */
+  --glass: rgb(255 255 255 / 0.76);
+  --glass-strong: rgb(255 255 255 / 0.84);
+  --solid: #f7f9fc; /* about what a pane resolves to over the wall; used where a surface must be opaque */
+  --edge: rgb(255 255 255 / 0.9);
+  --shine: inset 0 1px 0 rgb(255 255 255 / 0.9);
+  --shadow: 0 0 0 0.5px rgb(20 40 80 / 0.08), 0 1px 2px rgb(20 40 80 / 0.06), 0 10px 30px rgb(20 40 80 / 0.1);
+  --frost: blur(20px) saturate(180%);
+  --lens-rim: rgb(255 255 255 / 0.2); /* the faint body left in a pane's rim when it bends light */
+
+  /* Fills and lines set into a pane (Apple's fill and separator greys) */
+  --well: rgb(120 120 128 / 0.08);
+  --well-strong: rgb(120 120 128 / 0.16);
+  --hairline: rgb(60 60 67 / 0.13);
+  --hairline-strong: rgb(60 60 67 / 0.3);
+
+  /* Ink */
+  --ink: #111113;
+  --ink-2: #48484a;
+  --ink-3: #5c5c61;
+
+  /* One accent, blue: a fill for buttons and selection, and an ink for text, lines and focus */
+  --accent: #0071e3;
+  --on-accent: #ffffff;
+  --accent-ink: #0066cc;
+  --accent-soft: rgb(0 113 227 / 0.12);
+  --accent-glow: rgb(0 113 227 / 0.3);
+
+  /* Status tints: Apple's green, red, indigo and orange, thinned out */
+  --done-bg: rgb(52 199 89 / 0.18);
+  --done-ink: #0d6a2c;
+  --missed-bg: rgb(255 56 60 / 0.14);
+  --missed-ink: #b3211f;
+  --carried-bg: rgb(97 85 245 / 0.14);
+  --carried-ink: #3f33c4;
+  --carried-in-bg: rgb(255 141 40 / 0.18);
+  --carried-in-ink: #8a4b00;
+  --on-tone: #ffffff;
+
+  --backdrop: rgb(10 20 40 / 0.24);
+
+  /* A name written over a picture, the same in both themes */
+  --caption-bg: rgb(0 0 0 / 0.5);
+  --caption-ink: #ffffff;
+
+  /* Type: one family; its roundness axis is turned up to echo the capsule shapes */
+  --font-ui: 'Google Sans Flex Variable', system-ui, sans-serif;
+  --roundness: 'ROND' 100;
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-md: 0.9375rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.625rem;
+  --text-display: clamp(1.75rem, 1rem + 2.6vw, 2.875rem);
+
+  /* Space: a 4px grid */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+
+  /* Shape & size: generous curves, capsule controls */
+  --radius-sm: 10px;
+  --radius: 14px;
+  --radius-lg: 26px;
+  --pill: 999px;
+  --control: 2.375rem;
+  --bar: 3.5rem;
+  --topbar: calc(var(--bar) + var(--s-4) * 2);
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --base: #06122b;
+
+  /* Smoked glass at night: it darkens what is behind it, so text holds even over a bright aurora or moon */
+  --glass: rgb(8 12 26 / 0.5);
+  --glass-strong: rgb(28 33 46 / 0.86);
+  --solid: #161b27;
+  --edge: rgb(255 255 255 / 0.13);
+  --shine: inset 0 1px 0 rgb(255 255 255 / 0.13);
+  --shadow: 0 10px 30px rgb(0 0 0 / 0.5);
+  --lens-rim: rgb(255 255 255 / 0.04);
+
+  --well: rgb(140 150 180 / 0.16);
+  --well-strong: rgb(140 150 180 / 0.28);
+  --hairline: rgb(255 255 255 / 0.1);
+  --hairline-strong: rgb(255 255 255 / 0.26);
+
+  --ink: #f5f5f7;
+  --ink-2: #c9ccd6;
+  --ink-3: #9a9eac;
+
+  --accent-ink: #4aa8ff;
+  --accent-soft: rgb(0 145 255 / 0.2);
+  --accent-glow: rgb(0 113 227 / 0.45);
+
+  --done-bg: rgb(48 209 88 / 0.2);
+  --done-ink: #6fe095;
+  --missed-bg: rgb(255 66 69 / 0.2);
+  --missed-ink: #ff9a98;
+  --carried-bg: rgb(109 124 255 / 0.26);
+  --carried-ink: #b6bdff;
+  --carried-in-bg: rgb(255 146 48 / 0.2);
+  --carried-in-ink: #ffc38a;
+  --on-tone: #05070d;
+
+  --backdrop: rgb(0 0 0 / 0.55);
+}
+
+/* Asked for less transparency: the panes go solid and the blur switches off. */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass: var(--solid);
+    --glass-strong: var(--solid);
+    --frost: none;
+  }
+}
+
+/* A tone is set once with data-tone; anything inside reads --tone-bg / --tone-ink. */
+[data-tone='done'] { --tone-bg: var(--done-bg); --tone-ink: var(--done-ink); }
+[data-tone='missed'] { --tone-bg: var(--missed-bg); --tone-ink: var(--missed-ink); }
+[data-tone='carried'] { --tone-bg: var(--carried-bg); --tone-ink: var(--carried-ink); }
+[data-tone='carried-in'] { --tone-bg: var(--carried-in-bg); --tone-ink: var(--carried-in-ink); }

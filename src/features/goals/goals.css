@@ -1,0 +1,92 @@
+.goals-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  min-height: min(32rem, 70dvh);
+  overflow-y: auto;
+}
+
+.goal-col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  padding: var(--s-5);
+}
+
+.goal-col + .goal-col {
+  border-left: 1px solid var(--hairline);
+}
+
+.goal-col h3 {
+  font-size: var(--text-xl);
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+/* Pickers differ in shape; a shared minimum height keeps the three lists starting level. */
+.goal-col > :is(.stepper, .chips) {
+  align-content: flex-start;
+  align-self: flex-start;
+  min-height: 3.75rem;
+}
+
+.goal-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.goal {
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+}
+
+.goal input {
+  flex: 1;
+  min-width: 0;
+  height: var(--control);
+  padding: 0 var(--s-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+}
+
+.goal input:hover,
+.goal input:focus {
+  border-color: var(--hairline-strong);
+}
+
+.goal[data-done] input {
+  color: var(--ink-2);
+  text-decoration: line-through;
+}
+
+.goal .icon-btn {
+  opacity: 0;
+}
+
+.goal:is(:hover, :focus-within) .icon-btn {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .goal .icon-btn {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 860px) {
+  .goals-board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .goal-col + .goal-col {
+    border-top: 1px solid var(--hairline);
+    border-left: 0;
+  }
+
+  .goal-col > :is(.stepper, .chips) {
+    min-height: 0;
+  }
+}
