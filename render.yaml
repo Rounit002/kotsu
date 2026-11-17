@@ -9,6 +9,17 @@ services:
       - key: NODE_VERSION
         value: 22.12.0
     routes:
+      # The desktop installers are too large for the repository, so they live in a GitHub release.
+      # These addresses serve them from this site; a new version means changing the three targets.
+      - type: rewrite
+        source: /get/Kotsu-mac-arm64.dmg
+        destination: https://github.com/Rounit002/kotsu/releases/download/v1.0.0/Kotsu-1.0.0-mac-arm64.dmg
+      - type: rewrite
+        source: /get/Kotsu-mac-x64.dmg
+        destination: https://github.com/Rounit002/kotsu/releases/download/v1.0.0/Kotsu-1.0.0-mac-x64.dmg
+      - type: rewrite
+        source: /get/Kotsu-win-x64.exe
+        destination: https://github.com/Rounit002/kotsu/releases/download/v1.0.0/Kotsu-1.0.0-win-x64.exe
       # The app handles its own addresses (/daily), so every path serves the same page.
       - type: rewrite
         source: /*

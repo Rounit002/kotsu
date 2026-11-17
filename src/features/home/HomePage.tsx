@@ -2,6 +2,7 @@ import './home.css'
 
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { DESKTOP } from '../../config/features'
 import type { Lesson } from '../../domain/types'
 import { build, Typed, usePhase } from '../../ui/build'
 import { GoIcon } from '../../ui/icons'
@@ -50,10 +51,17 @@ export function HomePage() {
             Learned from {lesson.from}
           </figcaption>
         </figure>
-        <Link to="/daily" className="btn btn-primary" {...build('stamp', 16)}>
-          Plan today
-          <GoIcon size={16} />
-        </Link>
+        <div className="lesson-actions">
+          <Link to="/daily" className="btn btn-primary" {...build('stamp', 16)}>
+            Plan today
+            <GoIcon size={16} />
+          </Link>
+          {DESKTOP || (
+            <Link to="/download" className="link" {...build('print', 18)}>
+              Get the Mac or Windows app
+            </Link>
+          )}
+        </div>
       </section>
     </main>
   )

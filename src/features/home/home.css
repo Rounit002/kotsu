@@ -49,3 +49,30 @@
 .lesson figcaption:not([data-written]) {
   visibility: hidden;
 }
+
+/* The download page borrows the lesson's pane: one sentence, then a button for each installer. */
+.download-lead {
+  font-size: var(--text-xl, 1.5rem);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+}
+
+.downloads {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-3);
+}
+
+.downloads .btn span {
+  font-weight: 400;
+  opacity: 0.75;
+}
+
+.lesson-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--s-3) var(--s-5);
+}
