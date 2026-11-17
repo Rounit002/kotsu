@@ -1,12 +1,13 @@
 import './app.css'
 
 import { useState } from 'react'
-import { Link, NavLink, Outlet, useMatch, useNavigate } from 'react-router-dom'
+import { Link, NavLink, Outlet, useMatch } from 'react-router-dom'
 import { can, type FeatureId } from '../config/features'
-import { inYear, isISODate, today, yearOf } from '../domain/dates'
+import { inYear, today, yearOf } from '../domain/dates'
 import { AccountDialog } from '../features/account/AccountDialog'
 import { useDisplayName, usePlan } from '../features/account/store'
 import { GoalsDialog } from '../features/goals/GoalsDialog'
+import { useSelectedDate } from '../features/planner/selection'
 import { build, usePhase } from '../ui/build'
 import { Stepper } from '../ui/controls'
 import { DarkIcon, GoalIcon, HomeIcon, LightIcon } from '../ui/icons'
@@ -24,8 +25,8 @@ const VIEWS: { label: string; feature: FeatureId; to: string }[] = [
 
 /** The date being planned, when a planner view is open. */
 const useActiveDate = () => {
-  const date = useMatch('/daily/:date')?.params.date
-  return isISODate(date) ? date : null
+  const date = useSelectedDate((s) => s.date)
+  return useMatch('/daily') ? date : null
 }
 
 function ViewMenu() {
@@ -51,7 +52,7 @@ function ViewMenu() {
 export function AppLayout() {
   const [panel, setPanel] = useState<'goals' | 'account' | null>(null)
   const activeDate = useActiveDate()
-  const navigate = useNavigate()
+  const select = useSelectedDate((s) => s.select)
   const name = useDisplayName()
   const phase = usePhase(2400)
   const { theme, time, place, toggleTheme, choosePlace } = useScene()
@@ -82,7 +83,7 @@ export function AppLayout() {
           <div className="topbar-meta" {...build('stamp', 13)}>
             <span className="label">Year</span>
             {activeDate ? (
-              <Stepper value={yearOf(activeDate)} label="year" onChange={(y) => navigate(`/daily/${inYear(activeDate, y)}`)} />
+              <Stepper value={yearOf(activeDate)} label="year" onChange={(y) => select(inYear(activeDate, y))} />
             ) : (
               <strong>{yearOf(today())}</strong>
             )}

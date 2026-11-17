@@ -1,7 +1,7 @@
 import { memo, useEffect, useLayoutEffect, useMemo, useRef } from 'react'
-import { Link } from 'react-router-dom'
 import { daysBetween, daysByMonth, formatDate, MONTHS, today, yearOf, type ISODate } from '../../domain/dates'
 import { build } from '../../ui/build'
+import { useSelectedDate } from './selection'
 import { isPending, usePlanner } from './store'
 
 interface DayProps {
@@ -19,9 +19,9 @@ const NEARBY = 12
 /** Memoised: a year is 365 of these, and only the ones that change should re-render. */
 const RailDay = memo(function RailDay({ date, order, selected, isToday, pending }: DayProps) {
   return (
-    <Link
-      to={`/daily/${date}`}
+    <button
       className="rail-day"
+      onClick={() => useSelectedDate.getState().select(date)}
       aria-current={selected ? 'date' : undefined}
       data-today={isToday || undefined}
       data-pending={pending || undefined}
@@ -30,7 +30,7 @@ const RailDay = memo(function RailDay({ date, order, selected, isToday, pending 
       {/* Read aloud as "Tue 17", under its month's heading — the same words that are on screen. */}
       <span className="rail-dow">{formatDate(date, { weekday: 'short' })}</span>{' '}
       <span className="rail-num">{Number(date.slice(8))}</span>
-    </Link>
+    </button>
   )
 })
 

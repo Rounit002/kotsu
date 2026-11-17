@@ -1,13 +1,16 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
 import { addDays, formatDate, isISODate, type ISODate } from '../../domain/dates'
 import type { Task } from '../../domain/types'
 import { build } from '../../ui/build'
 import { CarryIcon, DeleteIcon } from '../../ui/icons'
+import { useSelectedDate } from './selection'
 import { canCarry, usePlanner } from './store'
 
+/** Jumps the planner to the other end of a carry. */
 const DateLink = ({ date }: { date: ISODate }) => (
-  <Link to={`/daily/${date}`}>{formatDate(date, { weekday: 'short', day: 'numeric', month: 'short' })}</Link>
+  <button className="link" onClick={() => useSelectedDate.getState().select(date)}>
+    {formatDate(date, { weekday: 'short', day: 'numeric', month: 'short' })}
+  </button>
 )
 
 /** What fills the right-hand pane for one goal: rename, write a note, carry it forward, or delete it. */

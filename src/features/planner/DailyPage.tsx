@@ -1,11 +1,11 @@
 import './planner.css'
 
 import { useMemo, useRef, useState } from 'react'
-import { Navigate, useParams } from 'react-router-dom'
-import { formatDate, isISODate, today, type ISODate } from '../../domain/dates'
+import { formatDate, today, type ISODate } from '../../domain/dates'
 import { build, Typed, usePhase } from '../../ui/build'
 import { AddInput } from '../../ui/controls'
 import { DateRail } from './DateRail'
+import { useSelectedDate } from './selection'
 import { tasksOn, usePlanner, type TaskTone } from './store'
 import { TaskDetail } from './TaskDetail'
 import { TaskRow } from './TaskRow'
@@ -21,9 +21,8 @@ const LEGEND: [TaskTone, string][] = [
 const TITLE_DELAY = 1450
 
 export function DailyPage() {
-  const { date } = useParams()
+  const date = useSelectedDate((s) => s.date)
   const phase = usePhase(3400)
-  if (!isISODate(date)) return <Navigate to={`/daily/${today()}`} replace />
 
   return (
     <main className="daily" data-phase={phase}>

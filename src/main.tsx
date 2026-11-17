@@ -16,7 +16,9 @@ createRoot(document.getElementById('root')!).render(
       <Routes>
         <Route element={<AppLayout />}>
           <Route index element={<HomePage />} />
-          <Route path="daily/:date?" element={<DailyPage />} />
+          {/* An address names a view and nothing else; anything typed after it is dropped. */}
+          <Route path="daily" element={<DailyPage />} />
+          <Route path="daily/*" element={<Navigate to="/daily" replace />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
