@@ -1,4 +1,5 @@
 import { useState, type FormEvent } from 'react'
+import { DESKTOP } from '../../config/features'
 import { useSyncStatus } from '../../data/sync'
 import { build } from '../../ui/build'
 import { Dialog } from '../../ui/Dialog'
@@ -68,9 +69,18 @@ function Account() {
         <p>
           <strong>Check your inbox.</strong> We sent a link to {sentTo}.
         </p>
-        <p className="muted">Open it on this device and you will be signed in. Everything you have written here goes with you.</p>
-        <button className="btn btn-outline" onClick={() => setSentTo('')}>
-          Back
+        <p className="muted">
+          {DESKTOP ? 'Open it to confirm your email, then come back and sign in here.' : 'Open it on this device and you will be signed in.'}{' '}
+          Everything you have written here goes with you.
+        </p>
+        <button
+          className="btn btn-outline"
+          onClick={() => {
+            setSentTo('')
+            setMode('signIn')
+          }}
+        >
+          {DESKTOP ? 'Sign in' : 'Back'}
         </button>
       </div>
     )

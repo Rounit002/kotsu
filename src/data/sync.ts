@@ -121,9 +121,10 @@ export function mirror<S, R extends { id: string }, Row extends { id: string }>(
         soon()
       })
 
-      // Coming back — to the network, or to this tab — is the moment to catch up.
+      // Coming back — to the network, to this tab, or to this window — is the moment to catch up.
       const onReturn = () => (unsent.save.size + unsent.remove.size ? send() : document.hidden || pull())
       window.addEventListener('online', onReturn)
+      window.addEventListener('focus', onReturn)
       document.addEventListener('visibilitychange', onReturn)
 
       stop = () => {
@@ -131,6 +132,7 @@ export function mirror<S, R extends { id: string }, Row extends { id: string }>(
         unsubscribe()
         clearTimeout(timer)
         window.removeEventListener('online', onReturn)
+        window.removeEventListener('focus', onReturn)
         document.removeEventListener('visibilitychange', onReturn)
       }
 

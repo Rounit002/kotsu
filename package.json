@@ -6,7 +6,9 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "desktop": "npm run build && npm --prefix desktop start",
+    "desktop:pack": "npm run build && npm --prefix desktop run pack --"
   },
   "dependencies": {
     "@fontsource-variable/google-sans-flex": "^5.3.2",

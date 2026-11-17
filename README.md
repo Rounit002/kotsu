@@ -21,6 +21,42 @@ The app is a static site: `npm run build` writes everything to `dist/`. [`render
 Render how to build and serve it — including the one rule a single-page app needs (every address serves
 `index.html`) and the security and caching headers. `.node-version` pins the Node version used to build.
 
+## The desktop app (Mac and Windows)
+
+[`desktop/`](desktop) wraps the same built site in a window of its own (Electron). It is not a second app:
+there is no desktop-only screen or store, and an ID and its data are the same ones the website uses.
+
+- **`main.js`** opens the window and serves `dist/` at a fixed address, `app://kotsu`. The fixed address is
+  what lets data saved on the computer be found on the next launch, and the files travel inside the program,
+  so it opens without a connection. Other addresses open in the browser, never in this window.
+- **`preload.cjs`** — on a Mac the picture runs to the top edge; this leaves a strip for the window buttons.
+- **`build/icon.svg`** is the icon; `icon.png` is the same drawing at 1024px, which the installers are made from.
+- **Signing in** works as on the website. The emailed confirmation link opens the website (a link cannot open
+  a desktop program); after confirming, sign in inside the app. `DESKTOP` in `config/features.ts` is the one
+  place the site knows it is running inside the program.
+
+```bash
+npm run desktop
+```
+
+runs it from source. Installers are written to `desktop/release/`:
+
+```bash
+npm run desktop:pack -- --mac
+```
+
+```bash
+npm run desktop:pack -- --win
+```
+
+The first run needs `npm install` inside `desktop/`, then `node node_modules/electron/install.js` there if npm
+skipped Electron's download.
+
+**Not signed.** Apple and Microsoft only trust installers signed with a paid developer certificate. Without
+one the app still works, but the first launch is blocked with a warning: on a Mac, open
+*System Settings → Privacy & Security* and choose *Open Anyway*; on Windows, *More info → Run anyway*.
+Updates are not automatic either — a new version is a new download.
+
 ## Measuring speed
 
 Measure the production build, never the dev server. `npm run dev` serves unminified code with React's
@@ -64,6 +100,7 @@ src/
     planner/           Daily view: date rail, goal list, note window, carry
     goals/             Year / month / week goals box
     account/           Profile, and sign-in (Supabase, behind an AuthGateway)
+desktop/               The Mac and Windows program: a window around the built site
 ```
 
 Rules that keep it clean:

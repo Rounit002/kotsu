@@ -18,3 +18,6 @@ export const FEATURES: Record<FeatureId, { released: boolean; plans: PlanId[] }>
 /** The only question the UI asks before showing a feature. */
 export const can = (feature: FeatureId, plan: PlanId = 'free') =>
   FEATURES[feature].released && FEATURES[feature].plans.includes(plan)
+
+/** Running inside the desktop app (which serves its pages as app://kotsu) rather than in a browser. */
+export const DESKTOP = location.protocol === 'app:'

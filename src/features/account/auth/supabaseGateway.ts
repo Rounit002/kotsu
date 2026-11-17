@@ -1,5 +1,5 @@
 import type { AuthError, User as Account } from '@supabase/supabase-js'
-import type { AuthProviderId } from '../../../config/features'
+import { DESKTOP, type AuthProviderId } from '../../../config/features'
 import { database } from '../../../data/supabase'
 import type { User } from '../../../domain/types'
 import type { AuthGateway, Credentials } from './gateway'
@@ -40,7 +40,8 @@ export const supabaseGateway: AuthGateway = {
   async signUp(name, credentials) {
     const { data, error } = await (await database()).auth.signUp({
       ...passwordOnly(credentials),
-      options: { data: { name }, emailRedirectTo: location.origin },
+      // The desktop app has no web address to come back to, so its link opens the website (Supabase's Site URL).
+      options: { data: { name }, emailRedirectTo: DESKTOP ? undefined : location.origin },
     })
     if (error) throw failure(error)
     // Supabase answers a repeat sign-up with a hollow user instead of an error.

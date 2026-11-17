@@ -1,0 +1,8 @@
+Copyright (c) 2026 Rounit002. All rights reserved.
+
+Kotsu's source code is published so that it can be read, and so that its hosting
+can build it. It is not open source. No permission is granted to copy, modify,
+redistribute, host or sell this software or any part of it, including its
+artwork and written content, without written permission from the copyright holder.
+
+Third-party code keeps its own licence (see each package, and src/ui/icons.tsx).

@@ -1,0 +1,2 @@
+<!-- The app icon, drawn to Apple's grid: an 824px tile centred on a 1024px canvas. icon.png is this file at 1024px. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024"><rect x="100" y="100" width="824" height="824" rx="185" fill="#0071e3"/><path d="M332 538l128 128 232-282" fill="none" stroke="#fff" stroke-width="82" stroke-linecap="round" stroke-linejoin="round"/></svg>
