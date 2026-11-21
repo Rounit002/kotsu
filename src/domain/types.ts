@@ -3,6 +3,8 @@ import type { ISODate } from './dates'
 
 export type TaskStatus = 'open' | 'done' | 'missed'
 
+export type Priority = 'high' | 'medium' | 'low'
+
 /** One end of a carry: the task on the other date. */
 export interface CarryLink {
   taskId: string
@@ -19,6 +21,7 @@ export interface Task {
   carriedTo?: CarryLink
   /** How long it should take. */
   minutes?: number
+  priority?: Priority
   /** Set when this is one day of a repeating goal. */
   routineId?: string
   createdAt: number
@@ -30,6 +33,7 @@ export interface Routine {
   title: string
   every: 'day' | 'week'
   minutes?: number
+  priority?: Priority
   starts: ISODate
   /** The first day it no longer appears; open-ended until it is stopped. */
   ends?: ISODate

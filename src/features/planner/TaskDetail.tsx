@@ -85,6 +85,20 @@ export function TaskDetail({ task }: { task: Task }) {
           />
         </div>
         <div className="field">
+          <span className="label">Priority</span>
+          <Chips
+            label="Priority"
+            value={task.priority ?? 'none'}
+            onChange={(p) => update(task, { priority: p === 'none' ? undefined : p })}
+            options={[
+              { value: 'none', label: 'None' },
+              { value: 'high', label: 'High' },
+              { value: 'medium', label: 'Medium' },
+              { value: 'low', label: 'Low' },
+            ]}
+          />
+        </div>
+        <div className="field">
           <span className="label">Duration</span>
           <Duration minutes={task.minutes} onChange={(minutes) => update(task, { minutes })} />
         </div>

@@ -217,6 +217,28 @@
   color: var(--tone-ink, var(--carried-in-ink));
 }
 
+/* Priority: a small pill before the title. High borrows the "not done" red, medium the warm orange. */
+.priority {
+  flex: none;
+  padding: 1px var(--s-2);
+  border-radius: var(--pill);
+  font-size: var(--text-xs);
+  font-weight: 650;
+  text-transform: capitalize;
+  background: var(--well-strong);
+  color: var(--ink-2);
+}
+
+.priority[data-priority='high'] {
+  background: var(--missed-bg);
+  color: var(--missed-ink);
+}
+
+.priority[data-priority='medium'] {
+  background: var(--carried-in-bg);
+  color: var(--carried-in-ink);
+}
+
 /* A goal's duration sits with its other tags, in the plain ink colour. */
 .task-time {
   color: var(--ink-2);

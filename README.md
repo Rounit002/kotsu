@@ -174,7 +174,8 @@ Supabase function would let it grow without a new release.
 ## Data model
 
 - **Task** — belongs to one date; has a title, note, status (`open` · `done` · `missed`) and an optional
-  duration in minutes. The day shows those durations against its 24 hours. Carrying copies it (with its
+  duration in minutes and a priority (`high` · `medium` · `low`). The day lists high first, then medium,
+  then goals without one, then low, and shows the durations against its 24 hours. Carrying copies it (with its
   note) to a later date and links the two with `carriedTo` / `carriedFrom`.
 - **Routine** — a task that repeats every day, or every week on the weekday it started. Its days are not
   stored ahead of time: `tasksOn` shows them, and one is saved only when it is touched (marked, noted,

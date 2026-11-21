@@ -40,6 +40,11 @@ export function TaskRow({ task, order, selected, onSelect }: Props) {
         </button>
       ))}
       <button className="task-main" onClick={onSelect}>
+        {task.priority && (
+          <span className="priority" data-priority={task.priority}>
+            {task.priority}
+          </span>
+        )}
         <span className="task-title">{task.title || 'Untitled'}</span>
         {task.note && <NoteIcon size={15} />}
         {task.routineId && <RepeatIcon size={15} />}

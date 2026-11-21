@@ -1,7 +1,7 @@
 import { userStore } from '../../data/persist'
 import { mirror } from '../../data/sync'
 import { daysBetween, type ISODate } from '../../domain/dates'
-import type { CarryLink, Routine, Task, TaskStatus } from '../../domain/types'
+import type { CarryLink, Priority, Routine, Task, TaskStatus } from '../../domain/types'
 
 /** What a task looks like in the list — one tone per task, mirrored by the legend. */
 export type TaskTone = 'open' | 'done' | 'missed' | 'carried' | 'carried-in'
@@ -17,6 +17,10 @@ export const isPending = (t: Task) => t.status === 'open' && !t.carriedTo
 /** A day has 24 hours to plan; a task carried away no longer takes any of them. */
 export const DAY_MINUTES = 24 * 60
 export const plannedMinutes = (tasks: Task[]) => tasks.reduce((sum, t) => sum + (t.carriedTo ? 0 : (t.minutes ?? 0)), 0)
+
+/** High first, then medium, then goals with none, then low; ties keep the order they were added. */
+const RANK: Record<Priority | 'none', number> = { high: 0, medium: 1, none: 2, low: 3 }
+const byPriority = (a: Task, b: Task) => RANK[a.priority ?? 'none'] - RANK[b.priority ?? 'none'] || a.createdAt - b.createdAt
 
 const fallsOn = (r: Routine, date: ISODate) =>
   date >= r.starts && !(r.ends && date >= r.ends) && !r.skipped.includes(date) && (r.every === 'day' || daysBetween(date, r.starts) % 7 === 0)
@@ -46,6 +50,7 @@ const occurrence = (r: Routine, date: ISODate): Task => ({
   note: '',
   status: 'open',
   minutes: r.minutes,
+  priority: r.priority,
   routineId: r.id,
   createdAt: r.createdAt,
 })
@@ -54,7 +59,7 @@ export const tasksOn = (tasks: Record<string, Task>, routines: Record<string, Ro
   const saved = Object.values(tasks).filter((t) => t.date === date)
   const here = new Set(saved.map((t) => t.routineId))
   const due = Object.values(routines).filter((r) => !here.has(r.id) && fallsOn(r, date))
-  return [...saved, ...due.map((r) => occurrence(r, date))].sort((a, b) => a.createdAt - b.createdAt)
+  return [...saved, ...due.map((r) => occurrence(r, date))].sort(byPriority)
 }
 
 const newTask = (date: ISODate, title: string, extra: Partial<Task> = {}): Task => ({
@@ -67,7 +72,7 @@ const newTask = (date: ISODate, title: string, extra: Partial<Task> = {}): Task 
   ...extra,
 })
 
-type Editable = Partial<Pick<Task, 'title' | 'note' | 'status' | 'minutes'>>
+type Editable = Partial<Pick<Task, 'title' | 'note' | 'status' | 'minutes' | 'priority'>>
 
 interface PlannerState {
   tasks: Record<string, Task>
@@ -95,8 +100,8 @@ export const usePlanner = userStore<PlannerState>('planner', (set) => ({
   update: (task, patch) =>
     set((s) => {
       const routine = task.routineId ? s.routines[task.routineId] : undefined
-      // Renaming or re-timing one day of a repeating goal changes the days still to come too.
-      const shared = { ...('title' in patch && { title: patch.title! }), ...('minutes' in patch && { minutes: patch.minutes }) }
+      // Renaming, re-timing or re-ranking one day of a repeating goal changes the days still to come too.
+      const shared = Object.fromEntries(Object.entries(patch).filter(([key]) => ['title', 'minutes', 'priority'].includes(key)))
       return {
         tasks: { ...s.tasks, [task.id]: { ...(s.tasks[task.id] ?? task), ...patch } },
         routines: routine && Object.keys(shared).length ? { ...s.routines, [routine.id]: { ...routine, ...shared } } : s.routines,
@@ -123,7 +128,7 @@ export const usePlanner = userStore<PlannerState>('planner', (set) => ({
     set((s) => {
       const from = s.tasks[task.id] ?? task
       if (!canCarry(from) || toDate <= from.date) return s
-      const copy = newTask(toDate, from.title, { note: from.note, minutes: from.minutes, carriedFrom: { taskId: from.id, date: from.date } })
+      const copy = newTask(toDate, from.title, { note: from.note, minutes: from.minutes, priority: from.priority, carriedFrom: { taskId: from.id, date: from.date } })
       const carried = { ...from, carriedTo: { taskId: copy.id, date: toDate } }
       return { tasks: { ...s.tasks, [from.id]: carried, [copy.id]: copy } }
     }),
@@ -137,7 +142,7 @@ export const usePlanner = userStore<PlannerState>('planner', (set) => ({
       if (current && current.starts >= task.date) delete routines[current.id]
       else if (current) routines[current.id] = { ...current, ends: task.date }
       const next: Routine | undefined = every
-        ? { id: crypto.randomUUID(), title: task.title, every, minutes: task.minutes, starts: task.date, skipped: [], createdAt: task.createdAt }
+        ? { id: crypto.randomUUID(), title: task.title, every, minutes: task.minutes, priority: task.priority, starts: task.date, skipped: [], createdAt: task.createdAt }
         : undefined
       if (next) routines[next.id] = next
       // Later days of the old rhythm that were saved but never touched go with it.
@@ -156,6 +161,7 @@ interface TaskRow {
   note: string
   status: TaskStatus
   minutes: number | null
+  priority: Priority | null
   routine_id: string | null
   carried_from_id: string | null
   carried_from_date: ISODate | null
@@ -178,6 +184,7 @@ mirror<PlannerState, Task, TaskRow>({
     note: t.note,
     status: t.status,
     minutes: t.minutes ?? null,
+    priority: t.priority ?? null,
     routine_id: t.routineId ?? null,
     carried_from_id: t.carriedFrom?.taskId ?? null,
     carried_from_date: t.carriedFrom?.date ?? null,
@@ -192,6 +199,7 @@ mirror<PlannerState, Task, TaskRow>({
     note: row.note,
     status: row.status,
     minutes: row.minutes ?? undefined,
+    priority: row.priority ?? undefined,
     routineId: row.routine_id ?? undefined,
     carriedFrom: link(row.carried_from_id, row.carried_from_date),
     carriedTo: link(row.carried_to_id, row.carried_to_date),
@@ -205,6 +213,7 @@ interface RoutineRow {
   title: string
   every: Routine['every']
   minutes: number | null
+  priority: Priority | null
   starts: ISODate
   ends: ISODate | null
   skipped: ISODate[]
@@ -221,6 +230,7 @@ mirror<PlannerState, Routine, RoutineRow>({
     title: r.title,
     every: r.every,
     minutes: r.minutes ?? null,
+    priority: r.priority ?? null,
     starts: r.starts,
     ends: r.ends ?? null,
     skipped: r.skipped,
@@ -231,6 +241,7 @@ mirror<PlannerState, Routine, RoutineRow>({
     title: row.title,
     every: row.every,
     minutes: row.minutes ?? undefined,
+    priority: row.priority ?? undefined,
     starts: row.starts,
     ends: row.ends ?? undefined,
     skipped: row.skipped,
