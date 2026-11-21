@@ -2,9 +2,37 @@ import { useState } from 'react'
 import { addDays, formatDate, isISODate, type ISODate } from '../../domain/dates'
 import type { Task } from '../../domain/types'
 import { build } from '../../ui/build'
+import { Chips } from '../../ui/controls'
 import { CarryIcon, DeleteIcon } from '../../ui/icons'
 import { useSelectedDate } from './selection'
-import { canCarry, usePlanner } from './store'
+import { canCarry, DAY_MINUTES, usePlanner } from './store'
+
+const HOURS = Array.from({ length: 25 }, (_, h) => h)
+const MINUTES = Array.from({ length: 12 }, (_, i) => i * 5)
+
+/** Hours and minutes, up to the day's 24 hours. Zero clears it. */
+function Duration({ minutes = 0, onChange }: { minutes?: number; onChange: (minutes: number | undefined) => void }) {
+  const [h, m] = [Math.floor(minutes / 60), minutes % 60]
+  const set = (hours: number, mins: number) => onChange(Math.min(hours * 60 + mins, DAY_MINUTES) || undefined)
+  return (
+    <div className="row duration">
+      <select className="input" aria-label="Hours" value={h} onChange={(e) => set(Number(e.target.value), m)}>
+        {HOURS.map((n) => (
+          <option key={n} value={n}>
+            {n} h
+          </option>
+        ))}
+      </select>
+      <select className="input" aria-label="Minutes" value={m} disabled={h === 24} onChange={(e) => set(h, Number(e.target.value))}>
+        {MINUTES.map((n) => (
+          <option key={n} value={n}>
+            {n} min
+          </option>
+        ))}
+      </select>
+    </div>
+  )
+}
 
 /** Jumps the planner to the other end of a carry. */
 const DateLink = ({ date }: { date: ISODate }) => (
@@ -15,9 +43,9 @@ const DateLink = ({ date }: { date: ISODate }) => (
 
 /** What fills the right-hand pane for one goal: rename, write a note, carry it forward, or delete it. */
 export function TaskDetail({ task }: { task: Task }) {
-  const update = usePlanner((s) => s.update)
-  const remove = usePlanner((s) => s.remove)
-  const carry = usePlanner((s) => s.carry)
+  const { update, remove, carry, repeat } = usePlanner.getState() // actions never change
+  const every = usePlanner((s) => (task.routineId && s.routines[task.routineId]?.every) || 'never')
+  const weekday = formatDate(task.date, { weekday: 'long' })
   const nextDay = addDays(task.date, 1)
   const [target, setTarget] = useState(nextDay)
   const [confirming, setConfirming] = useState(false)
@@ -28,7 +56,7 @@ export function TaskDetail({ task }: { task: Task }) {
         className="detail-title"
         aria-label="Goal"
         value={task.title}
-        onChange={(e) => update(task.id, { title: e.target.value })}
+        onChange={(e) => update(task, { title: e.target.value })}
         {...build('print')}
       />
 
@@ -38,9 +66,29 @@ export function TaskDetail({ task }: { task: Task }) {
           className="input"
           value={task.note}
           placeholder="Context, the next step, why it matters…"
-          onChange={(e) => update(task.id, { note: e.target.value })}
+          onChange={(e) => update(task, { note: e.target.value })}
         />
       </label>
+
+      <div className="detail-pair" {...build('print', 0, 3)}>
+        <div className="field">
+          <span className="label">Repeats</span>
+          <Chips
+            label="Repeats"
+            value={every}
+            onChange={(every) => repeat(task, every === 'never' ? null : every)}
+            options={[
+              { value: 'never', label: 'No' },
+              { value: 'day', label: 'Every day' },
+              { value: 'week', label: `Every ${weekday}` },
+            ]}
+          />
+        </div>
+        <div className="field">
+          <span className="label">Duration</span>
+          <Duration minutes={task.minutes} onChange={(minutes) => update(task, { minutes })} />
+        </div>
+      </div>
 
       {task.carriedFrom && (
         <p className="detail-status" data-tone="carried-in" {...build('print', 0, 4)}>
@@ -55,7 +103,7 @@ export function TaskDetail({ task }: { task: Task }) {
           <span>
             Carried to <DateLink date={task.carriedTo.date} />
           </span>
-          <button className="link" onClick={() => remove(task.carriedTo!.taskId)}>
+          <button className="link" onClick={() => remove({ id: task.carriedTo!.taskId, date: task.carriedTo!.date })}>
             Undo
           </button>
         </p>
@@ -73,7 +121,7 @@ export function TaskDetail({ task }: { task: Task }) {
                 value={target}
                 onChange={(e) => setTarget(e.target.value)}
               />
-              <button className="btn btn-primary" disabled={!isISODate(target) || target <= task.date} onClick={() => carry(task.id, target)}>
+              <button className="btn btn-primary" disabled={!isISODate(target) || target <= task.date} onClick={() => carry(task, target)}>
                 <CarryIcon size={16} />
                 Carry
               </button>
@@ -84,11 +132,11 @@ export function TaskDetail({ task }: { task: Task }) {
 
       <button
         className="btn btn-danger detail-delete"
-        onClick={() => (confirming ? remove(task.id) : setConfirming(true))}
+        onClick={() => (confirming ? remove(task) : setConfirming(true))}
         {...build('stamp', 0, 9)}
       >
         <DeleteIcon size={16} />
-        {confirming ? 'Click again to delete' : 'Delete'}
+        {confirming ? 'Click again to confirm' : task.routineId ? 'Remove from this day' : 'Delete'}
       </button>
     </>
   )

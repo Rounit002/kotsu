@@ -17,6 +17,40 @@ export interface Task {
   status: TaskStatus
   carriedFrom?: CarryLink
   carriedTo?: CarryLink
+  /** How long it should take. */
+  minutes?: number
+  /** Set when this is one day of a repeating goal. */
+  routineId?: string
+  createdAt: number
+}
+
+/** A goal that comes back every day, or every week on the weekday it started. */
+export interface Routine {
+  id: string
+  title: string
+  every: 'day' | 'week'
+  minutes?: number
+  starts: ISODate
+  /** The first day it no longer appears; open-ended until it is stopped. */
+  ends?: ISODate
+  /** Days it was taken off one at a time. */
+  skipped: ISODate[]
+  createdAt: number
+}
+
+/** A place you post to — YouTube, X, Instagram — and the ideas kept for it. */
+export interface ContentCategory {
+  id: string
+  name: string
+  createdAt: number
+}
+
+export interface ContentIdea {
+  id: string
+  categoryId: string
+  text: string
+  /** Made and posted. */
+  done: boolean
   createdAt: number
 }
 

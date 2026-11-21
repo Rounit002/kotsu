@@ -99,6 +99,7 @@ src/
     home/              Life lessons: lessons.json and the page that writes them out
     planner/           Daily view: date rail, goal list, note window, carry
     goals/             Year / month / week goals box
+    content/           Content Planner: categories (YouTube, X…) and the ideas kept for each
     account/           Profile, and sign-in (Supabase, behind an AuthGateway)
 desktop/               The Mac and Windows program: a window around the built site
 ```
@@ -139,8 +140,10 @@ Sign-in and storage for people with an ID run on Supabase.
   database from the signed-in session, and row-level security only ever returns a person their own rows.
   A tampered client still cannot read or write anyone else's. `subscriptions` is read-only to its owner, so
   a plan can only be changed by the server (a payment webhook).
-- **Schema** — [`supabase/migrations/0001_init.sql`](supabase/migrations/0001_init.sql): `profiles`,
-  `subscriptions`, `tasks`, `goals`, mirroring `src/domain/types.ts`.
+- **Schema** — [`supabase/migrations/`](supabase/migrations), run in order: `profiles`, `subscriptions`,
+  `tasks`, `goals`, then `routines`, `content_categories`, `content_ideas`, mirroring `src/domain/types.ts`.
+  A migration must only add (new tables, new nullable columns) so installed desktop apps keep syncing, and
+  it must run before the code that uses it is pushed.
 - **Checking privacy** — [`supabase/tests/privacy.sql`](supabase/tests/privacy.sql) acts as two users and a
   signed-out visitor and reports what each could reach, then rolls itself back. Run it after any change to
   the schema or its policies.
@@ -170,8 +173,14 @@ Supabase function would let it grow without a new release.
 
 ## Data model
 
-- **Task** — belongs to one date; has a title, note and status (`open` · `done` · `missed`).
-  Carrying copies it (with its note) to a later date and links the two with `carriedTo` / `carriedFrom`.
+- **Task** — belongs to one date; has a title, note, status (`open` · `done` · `missed`) and an optional
+  duration in minutes. The day shows those durations against its 24 hours. Carrying copies it (with its
+  note) to a later date and links the two with `carriedTo` / `carriedFrom`.
+- **Routine** — a task that repeats every day, or every week on the weekday it started. Its days are not
+  stored ahead of time: `tasksOn` shows them, and one is saved only when it is touched (marked, noted,
+  carried). That saved day gets an id derived from the routine and the date, so two devices filling in the
+  same day write one row. Removing one day adds it to `skipped`; stopping it sets `ends`.
+- **Content category / idea** — a place you post to, and the ideas kept for it (marked once posted).
 - **Goal** — belongs to a `year`, `month` or `week` period.
 - **Lesson** — a line in our own words, who it was learned from, and the page that documents it.
 - **User** — name, email, sign-in providers and plan.

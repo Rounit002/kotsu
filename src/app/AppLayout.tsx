@@ -5,12 +5,13 @@ import { Link, NavLink, Outlet, useMatch } from 'react-router-dom'
 import { can, type FeatureId } from '../config/features'
 import { inYear, today, yearOf } from '../domain/dates'
 import { AccountDialog } from '../features/account/AccountDialog'
+import { ContentDialog } from '../features/content/ContentDialog'
 import { useDisplayName, usePlan } from '../features/account/store'
 import { GoalsDialog } from '../features/goals/GoalsDialog'
 import { useSelectedDate } from '../features/planner/selection'
 import { build, usePhase } from '../ui/build'
 import { Stepper } from '../ui/controls'
-import { DarkIcon, GoalIcon, HomeIcon, LightIcon } from '../ui/icons'
+import { DarkIcon, GoalIcon, HomeIcon, IdeaIcon, LightIcon } from '../ui/icons'
 import { Lens } from '../ui/Lens'
 import { Menu } from '../ui/Menu'
 import { ScenePicker } from './scenes/ScenePicker'
@@ -48,9 +49,9 @@ function ViewMenu() {
   )
 }
 
-/** The frame around every page: the wall, the glass bar, the page, and the two boxes that open over it. */
+/** The frame around every page: the wall, the glass bar, the page, and the boxes that open over it. */
 export function AppLayout() {
-  const [panel, setPanel] = useState<'goals' | 'account' | null>(null)
+  const [panel, setPanel] = useState<'goals' | 'content' | 'account' | null>(null)
   const activeDate = useActiveDate()
   const select = useSelectedDate((s) => s.select)
   const name = useDisplayName()
@@ -74,10 +75,16 @@ export function AppLayout() {
           </button>
         </div>
 
-        <button className="btn btn-tonal" onClick={() => setPanel('goals')} {...build('stamp', 12)}>
-          <GoalIcon size={16} />
-          Goals
-        </button>
+        <div className="row topbar-center">
+          <button className="btn btn-tonal" onClick={() => setPanel('goals')} {...build('stamp', 12)}>
+            <GoalIcon size={16} />
+            Goals
+          </button>
+          <button className="btn btn-tonal" onClick={() => setPanel('content')} {...build('stamp', 12.5)}>
+            <IdeaIcon size={16} />
+            Content
+          </button>
+        </div>
 
         <div className="topbar-end">
           <div className="topbar-meta" {...build('stamp', 13)}>
@@ -103,6 +110,7 @@ export function AppLayout() {
       <Outlet />
 
       <GoalsDialog open={panel === 'goals'} anchor={activeDate ?? today()} onClose={close} />
+      <ContentDialog open={panel === 'content'} onClose={close} />
       <AccountDialog open={panel === 'account'} onClose={close} />
     </>
   )

@@ -1,12 +1,12 @@
 import './planner.css'
 
-import { useMemo, useRef, useState } from 'react'
-import { formatDate, today, type ISODate } from '../../domain/dates'
+import { useMemo, useRef, useState, type CSSProperties } from 'react'
+import { formatDate, formatMinutes, today, type ISODate } from '../../domain/dates'
 import { build, Typed, usePhase } from '../../ui/build'
 import { AddInput } from '../../ui/controls'
 import { DateRail } from './DateRail'
 import { useSelectedDate } from './selection'
-import { tasksOn, usePlanner, type TaskTone } from './store'
+import { DAY_MINUTES, plannedMinutes, tasksOn, usePlanner, type TaskTone } from './store'
 import { TaskDetail } from './TaskDetail'
 import { TaskRow } from './TaskRow'
 
@@ -51,8 +51,10 @@ export function DailyPage() {
 
 function Day({ date, titleDelay }: { date: ISODate; titleDelay: number }) {
   const all = usePlanner((s) => s.tasks)
+  const routines = usePlanner((s) => s.routines)
   const add = usePlanner((s) => s.add)
-  const tasks = useMemo(() => tasksOn(all, date), [all, date])
+  const tasks = useMemo(() => tasksOn(all, routines, date), [all, routines, date])
+  const planned = plannedMinutes(tasks)
   const [selectedId, setSelectedId] = useState<string>()
   // Goals already here when the day opens are laid down one after another; later ones land at once.
   const [atOpen] = useState(() => new Set(tasks.map((t) => t.id)))
@@ -76,6 +78,24 @@ function Day({ date, titleDelay }: { date: ISODate; titleDelay: number }) {
           {date === today() && 'Today · '}
           {tasks.length ? `${done} of ${tasks.length} done` : 'Nothing planned yet'}
         </p>
+        {/* The day's 24 hours, filled by the durations given to its goals. */}
+        <div className="day-time" {...build('print', 22, 6)}>
+          <span
+            className="day-meter"
+            role="meter"
+            aria-label="Hours planned out of 24"
+            aria-valuemin={0}
+            aria-valuemax={DAY_MINUTES}
+            aria-valuenow={Math.min(planned, DAY_MINUTES)}
+            data-over={planned > DAY_MINUTES || undefined}
+            style={{ '--fill': Math.min(planned / DAY_MINUTES, 1) } as CSSProperties}
+          />
+          <span>
+            {planned > DAY_MINUTES
+              ? `${formatMinutes(planned)} planned · ${formatMinutes(planned - DAY_MINUTES)} over 24h`
+              : `${formatMinutes(planned)} planned · ${formatMinutes(DAY_MINUTES - planned)} left`}
+          </span>
+        </div>
       </header>
 
       <div className="day-body">

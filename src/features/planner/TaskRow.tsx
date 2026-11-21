@@ -1,7 +1,7 @@
-import { formatDate, type ISODate } from '../../domain/dates'
+import { formatDate, formatMinutes, type ISODate } from '../../domain/dates'
 import type { Task, TaskStatus } from '../../domain/types'
 import { build } from '../../ui/build'
-import { CloseIcon, DoneIcon, NoteIcon } from '../../ui/icons'
+import { CloseIcon, DoneIcon, NoteIcon, RepeatIcon } from '../../ui/icons'
 import { toneOf, usePlanner } from './store'
 
 const short = (date: ISODate) => formatDate(date, { day: 'numeric', month: 'short' })
@@ -22,7 +22,7 @@ interface Props {
 export function TaskRow({ task, order, selected, onSelect }: Props) {
   const update = usePlanner((s) => s.update)
   // Pressing the active mark again clears it.
-  const mark = (status: TaskStatus) => update(task.id, { status: task.status === status ? 'open' : status })
+  const mark = (status: TaskStatus) => update(task, { status: task.status === status ? 'open' : status })
 
   return (
     <li className="task" data-tone={toneOf(task)} data-selected={selected || undefined} {...build('print', 24 + order, 4 + order)}>
@@ -42,6 +42,8 @@ export function TaskRow({ task, order, selected, onSelect }: Props) {
       <button className="task-main" onClick={onSelect}>
         <span className="task-title">{task.title || 'Untitled'}</span>
         {task.note && <NoteIcon size={15} />}
+        {task.routineId && <RepeatIcon size={15} />}
+        {!!task.minutes && <span className="task-tag task-time">{formatMinutes(task.minutes)}</span>}
         {task.carriedTo ? (
           <span className="task-tag">→ {short(task.carriedTo.date)}</span>
         ) : (

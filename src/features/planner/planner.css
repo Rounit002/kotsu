@@ -217,6 +217,35 @@
   color: var(--tone-ink, var(--carried-in-ink));
 }
 
+/* A goal's duration sits with its other tags, in the plain ink colour. */
+.task-time {
+  color: var(--ink-2);
+  font-variant-numeric: tabular-nums;
+}
+
+/* The day's 24 hours: a slim track that fills as goals are given durations. */
+.day-time {
+  display: flex;
+  flex-basis: 100%;
+  align-items: center;
+  gap: var(--s-3);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+}
+
+.day-meter {
+  flex: 1;
+  max-width: 16rem;
+  height: 6px;
+  border-radius: var(--pill);
+  background: linear-gradient(var(--accent), var(--accent)) 0 / calc(var(--fill) * 100%) 100% no-repeat, var(--well-strong);
+}
+
+.day-meter[data-over] {
+  background: var(--missed-ink);
+}
+
 /* ── Detail window ────────────────────────────────────── */
 .detail {
   display: flex;
@@ -268,6 +297,16 @@
 .detail .input[type='date'] {
   width: auto;
   flex: 1;
+}
+
+.detail-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--s-4) var(--s-6);
+}
+
+.duration .input {
+  width: auto;
 }
 
 .detail-delete {

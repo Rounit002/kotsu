@@ -1,0 +1,165 @@
+/* Categories on the left, the open one's ideas on the right — the same frame as the Goals box. */
+.content-board {
+  display: grid;
+  grid-template-columns: 15rem minmax(0, 1fr);
+  min-height: min(32rem, 70dvh);
+  overflow-y: auto;
+}
+
+.categories {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-3);
+  padding: var(--s-5);
+  border-right: 1px solid var(--hairline);
+}
+
+.categories ul {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.category {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--s-2);
+  width: 100%;
+  min-height: var(--control);
+  padding: 0 var(--s-3);
+  border-radius: var(--radius-sm);
+  text-align: left;
+}
+
+.category span:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.category:hover {
+  background: var(--well-strong);
+}
+
+.category[aria-current] {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  font-weight: 600;
+}
+
+/* How many ideas are still waiting to be made. */
+.category-count {
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
+}
+
+.ideas {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-4);
+  min-width: 0;
+  padding: var(--s-5);
+}
+
+.ideas-head {
+  display: flex;
+  align-items: center;
+  gap: var(--s-3);
+}
+
+.ideas-name {
+  flex: 1;
+  min-width: 0;
+  padding: var(--s-1) 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: none;
+  font-size: var(--text-xl);
+  font-weight: 650;
+  letter-spacing: -0.02em;
+}
+
+.ideas-name:hover,
+.ideas-name:focus {
+  border-bottom-color: var(--hairline-strong);
+  outline: none;
+}
+
+.idea-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--s-1);
+}
+
+.idea {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--s-2);
+}
+
+.idea .mark {
+  margin-top: var(--s-1);
+}
+
+/* An idea grows with what is written in it. */
+.idea textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: var(--control);
+  padding: var(--s-2);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: none;
+  line-height: 1.45;
+  resize: none;
+  field-sizing: content;
+}
+
+.idea textarea:hover,
+.idea textarea:focus {
+  border-color: var(--hairline-strong);
+  outline: none;
+}
+
+.idea[data-done] textarea {
+  color: var(--ink-2);
+  text-decoration: line-through;
+}
+
+.idea .icon-btn {
+  opacity: 0;
+}
+
+.idea:is(:hover, :focus-within) .icon-btn {
+  opacity: 1;
+}
+
+@media (hover: none) {
+  .idea .icon-btn {
+    opacity: 1;
+  }
+}
+
+.content-empty {
+  margin: auto;
+  max-width: 24rem;
+  padding: var(--s-5);
+  text-align: center;
+}
+
+@media (max-width: 760px) {
+  .content-board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .categories {
+    border-right: 0;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .ideas-head {
+    flex-wrap: wrap;
+  }
+}

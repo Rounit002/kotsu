@@ -57,3 +57,7 @@ export const weeksOfMonth = (year: number, month: number) => {
   for (let w = weekStart(toISO(new Date(year, month, 1))); w <= end; w = addDays(w, 7)) weeks.push(w)
   return weeks
 }
+
+/** 90 → "1h 30m", 45 → "45m", 120 → "2h". */
+export const formatMinutes = (minutes: number) =>
+  [Math.floor(minutes / 60) && `${Math.floor(minutes / 60)}h`, minutes % 60 && `${minutes % 60}m`].filter(Boolean).join(' ') || '0m'

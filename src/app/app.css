@@ -96,7 +96,7 @@ button.topbar-meta:hover {
   padding-right: 0;
 }
 
-/* Narrow screens: navigation and Goals share the first row, the year drops to its own. */
+/* Narrow screens: navigation on the first row, the year on the second, Goals and Content on the third. */
 @media (max-width: 720px) {
   .topbar {
     display: flex;
@@ -108,13 +108,23 @@ button.topbar-meta:hover {
     border-radius: var(--radius-lg);
   }
 
-  .topbar > .row {
+  .topbar > .row:first-child {
     flex: 1;
     min-width: 0;
   }
 
   .topbar-end {
     flex-basis: 100%;
+  }
+
+  /* Goals and Content share the last row, half each. */
+  .topbar-center {
+    order: 1;
+    flex-basis: 100%;
+  }
+
+  .topbar-center .btn {
+    flex: 1;
   }
 
   button.topbar-meta .label {
