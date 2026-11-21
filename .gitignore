@@ -6,3 +6,4 @@ release
 # .env holds only public values and is committed; anything private goes in .env.local
 .env.*
 .claude/
+*.tsbuildinfo

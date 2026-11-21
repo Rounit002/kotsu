@@ -55,6 +55,10 @@ export interface ContentIdea {
   text: string
   /** Made and posted. */
   done: boolean
+  /** When it was marked done. */
+  doneAt?: number
+  /** Place in its category's list, lowest first; ideas without one sit by age, newest first. */
+  position?: number
   createdAt: number
 }
 

@@ -88,9 +88,50 @@
 }
 
 .idea-list {
+  --grip: var(--s-5);
+  position: relative; /* where the held idea is measured from */
   display: flex;
   flex-direction: column;
   gap: var(--s-1);
+}
+
+/* The handle an idea is dragged by; a finger on it drags rather than scrolls. */
+.idea-grip {
+  width: var(--grip);
+  margin-top: var(--s-1);
+  cursor: grab;
+  touch-action: none;
+  color: var(--ink-3);
+}
+
+.idea[data-dragging] {
+  position: relative;
+  z-index: 1;
+  border-radius: var(--radius-sm);
+  background: var(--glass-strong);
+  box-shadow: var(--shadow);
+}
+
+.idea[data-dragging] .idea-grip {
+  cursor: grabbing;
+}
+
+.idea-done-head {
+  margin-top: var(--s-3);
+}
+
+/* Done ideas cannot be moved; their ticks still line up with the ones above. */
+.idea-done {
+  padding-left: calc(var(--grip) + var(--s-2));
+}
+
+/* When a done idea was done. */
+.idea-date {
+  flex: none;
+  margin-top: var(--s-2);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-3);
 }
 
 .idea {
@@ -128,7 +169,7 @@
   text-decoration: line-through;
 }
 
-.idea .icon-btn {
+.idea .icon-btn:not(.idea-grip) {
   opacity: 0;
 }
 

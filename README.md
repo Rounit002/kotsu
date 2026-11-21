@@ -91,7 +91,7 @@ src/
   data/persist.ts      The copy on the device, and whose it is
   data/sync.ts         Keeps a signed-in person's stores and their database tables in step
   data/supabase.ts     The connection to the database
-  ui/                  Reusable pieces: Dialog, Menu, AddInput, Stepper, Chips, icons, build
+  ui/                  Reusable pieces: Dialog, Menu, AddInput, Stepper, Chips, drag-to-reorder, icons, build
   styles/              Design tokens, glass and shared CSS, the opening sequence
   app/                 Top bar and page frame
   app/scenes/          The backgrounds: a painting kit, the five places, the picker, day/night
@@ -181,7 +181,9 @@ Supabase function would let it grow without a new release.
   stored ahead of time: `tasksOn` shows them, and one is saved only when it is touched (marked, noted,
   carried). That saved day gets an id derived from the routine and the date, so two devices filling in the
   same day write one row. Removing one day adds it to `skipped`; stopping it sets `ends`.
-- **Content category / idea** — a place you post to, and the ideas kept for it (marked once posted).
+- **Content category / idea** — a place you post to, and the ideas kept for it. Ideas still to make keep
+  the order they are dragged into (`position`); ticking one moves it to the category's Done list with the
+  date it was done (`doneAt`).
 - **Goal** — belongs to a `year`, `month` or `week` period.
 - **Lesson** — a line in our own words, who it was learned from, and the page that documents it.
 - **User** — name, email, sign-in providers and plan.

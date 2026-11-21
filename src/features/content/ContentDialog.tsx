@@ -1,23 +1,68 @@
 import './content.css'
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
+import { formatDate, toISO } from '../../domain/dates'
+import type { ContentIdea } from '../../domain/types'
 import { build } from '../../ui/build'
 import { AddInput } from '../../ui/controls'
 import { Dialog } from '../../ui/Dialog'
-import { CloseIcon, DeleteIcon, DoneIcon } from '../../ui/icons'
-import { useContent } from './store'
+import { CloseIcon, DeleteIcon, DoneIcon, GripIcon } from '../../ui/icons'
+import { useSortable } from '../../ui/sortable'
+import { doneIdeas, openIdeas, useContent } from './store'
 
 /** Offered while there are no categories yet, so the first one is a click away. */
 const STARTERS = ['YouTube', 'X', 'Instagram']
 
-/** The ideas kept for one category: newest first, each one written out in full. */
+/** "21 Nov", with the year only when it is not this one. */
+const doneOn = (ms: number) => {
+  const date = new Date(ms)
+  const year = date.getFullYear() === new Date().getFullYear() ? undefined : 'numeric'
+  return formatDate(toISO(date), { day: 'numeric', month: 'short', year })
+}
+
+/** One idea: its tick, its text (growing as it is written), and a way to delete it. */
+function Idea({ idea, children }: { idea: ContentIdea; children?: ReactNode }) {
+  const { updateIdea, toggleDone, removeIdea } = useContent.getState()
+  return (
+    <li className="idea" data-sort-id={idea.id} data-done={idea.done || undefined} {...build('print')}>
+      {children}
+      <button
+        className="mark"
+        data-tone="done"
+        aria-label={idea.done ? 'Mark as not done' : 'Mark as done'}
+        aria-pressed={idea.done}
+        onClick={() => toggleDone(idea.id)}
+      >
+        <DoneIcon size={14} bold />
+      </button>
+      <textarea aria-label="Idea" rows={1} value={idea.text} onChange={(e) => updateIdea(idea.id, { text: e.target.value })} />
+      {idea.done && idea.doneAt && (
+        <time className="idea-date" dateTime={new Date(idea.doneAt).toISOString()}>
+          {doneOn(idea.doneAt)}
+        </time>
+      )}
+      <button className="icon-btn" aria-label="Delete idea" onClick={() => removeIdea(idea.id)}>
+        <CloseIcon size={16} />
+      </button>
+    </li>
+  )
+}
+
+/** The ideas kept for one category: the ones still to make in the order you put them, then the done ones. */
 function Ideas({ categoryId }: { categoryId: string }) {
   const all = useContent((s) => s.ideas)
   const category = useContent((s) => s.categories.find((c) => c.id === categoryId))
-  const { addIdea, updateIdea, removeIdea, renameCategory, removeCategory } = useContent.getState() // actions never change
-  const ideas = useMemo(() => all.filter((i) => i.categoryId === categoryId), [all, categoryId])
+  const { addIdea, reorder, renameCategory, removeCategory } = useContent.getState() // actions never change
+  const todo = useMemo(() => openIdeas(all, categoryId), [all, categoryId])
+  const done = useMemo(() => doneIdeas(all, categoryId), [all, categoryId])
+  const byId = useMemo(() => new Map(todo.map((i) => [i.id, i])), [todo])
+  const sortable = useSortable(
+    todo.map((i) => i.id),
+    reorder,
+  )
   const [confirming, setConfirming] = useState(false)
   if (!category) return null
+  const count = todo.length + done.length
 
   return (
     <section className="ideas" {...build('print', 14)}>
@@ -30,30 +75,31 @@ function Ideas({ categoryId }: { categoryId: string }) {
         />
         <button className="btn btn-danger" onClick={() => (confirming ? removeCategory(category.id) : setConfirming(true))}>
           <DeleteIcon size={16} />
-          {confirming ? `Delete it and its ${ideas.length} ideas?` : 'Delete category'}
+          {confirming ? `Delete it and its ${count} ideas?` : 'Delete category'}
         </button>
       </header>
       <AddInput placeholder={`Add an idea for ${category.name || 'this category'}`} onAdd={(text) => addIdea(category.id, text)} />
-      <ul className="idea-list">
-        {ideas.map((idea) => (
-          <li key={idea.id} className="idea" data-done={idea.done || undefined} {...build('print')}>
-            <button
-              className="mark"
-              data-tone="done"
-              aria-label={idea.done ? 'Mark as not posted' : 'Mark as posted'}
-              aria-pressed={idea.done}
-              onClick={() => updateIdea(idea.id, { done: !idea.done })}
-            >
-              <DoneIcon size={14} bold />
+      <ul className="idea-list" ref={sortable.list}>
+        {sortable.order.map((id) => (
+          <Idea key={id} idea={byId.get(id)!}>
+            <button className="icon-btn idea-grip" aria-label="Move idea (drag, or use the arrow keys)" {...sortable.handle(id)}>
+              <GripIcon size={16} bold />
             </button>
-            <textarea aria-label="Idea" rows={1} value={idea.text} onChange={(e) => updateIdea(idea.id, { text: e.target.value })} />
-            <button className="icon-btn" aria-label="Delete idea" onClick={() => removeIdea(idea.id)}>
-              <CloseIcon size={16} />
-            </button>
-          </li>
+          </Idea>
         ))}
       </ul>
-      {!ideas.length && <p className="muted">No ideas yet. Write one above and press Enter; open it again to add detail.</p>}
+      {!count && <p className="muted">No ideas yet. Write one above and press Enter; open it again to add detail.</p>}
+      {!todo.length && !!count && <p className="muted">Everything here is done.</p>}
+      {!!done.length && (
+        <>
+          <p className="label idea-done-head">Done · {done.length}</p>
+          <ul className="idea-list idea-done">
+            {done.map((idea) => (
+              <Idea key={idea.id} idea={idea} />
+            ))}
+          </ul>
+        </>
+      )}
     </section>
   )
 }
